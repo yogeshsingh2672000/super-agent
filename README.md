@@ -15,18 +15,26 @@ AWS credentials come from `aws configure` (~/.aws) unless set in `.env`.
 ```powershell
 .venv\Scripts\python main.py
 ```
-Commands: `/budget`, `/memory`, `/new` (fresh chat, memories kept), `/exit`. `Ctrl+C` stops the current task.
+Commands: `/budget`, `/memory`, `/stats`, `/new` (fresh chat, memories kept), `/exit`. `Ctrl+C` stops the current task.
+
+While a task runs, a live line shows CPU, system RAM, and the RAM used by the agent and its browser/shell processes. It updates every second.
 
 ## Skills
 | Skill | Tools |
 |---|---|
 | Files | list_directory, read_file, write_file, delete_path |
 | Shell | run_command (PowerShell) |
-| Web | web_search, fetch_page |
+| Web | web_search, news_search, fetch_page |
 | Browser | browser_open, browser_read, browser_click, browser_type, browser_press_key |
 | Screen | take_screenshot, mouse_click, type_text, press_keys, scroll |
 | Memory | remember, recall, forget |
 | Budget | record_expense, record_income, budget_status |
+
+## Sources
+- Every web result gets a number `[n]`. The agent cites them in its answer.
+- After the answer, a **📚 Sources** panel lists the cited sources as clickable links. Ctrl+click them in Windows Terminal.
+- Each source is marked ✅ opened or ⚠️ snippet only, with its date.
+- Every number in the answer is checked against the text of its cited source. Numbers that aren't found are flagged ❌ in red.
 
 ## Safety
 - **Blocked**: formatting drives, deleting system folders, drive roots or the home folder, registry deletes, shutdown.

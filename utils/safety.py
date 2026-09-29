@@ -2,6 +2,7 @@ import os
 import re
 from pathlib import Path
 
+from utils import system_monitor
 from utils.logger import console, log
 
 # Never allowed
@@ -60,7 +61,8 @@ def _matches(patterns: list[str], text: str) -> bool:
 
 def ask_user(action: str) -> bool:
     log("⚠️ ", f"Approval needed: {action}", style="bold yellow")
-    answer = console.input("[bold yellow]   Allow? (y/n): [/]").strip().lower()
+    with system_monitor.paused():
+        answer = console.input("[bold yellow]   Allow? (y/n): [/]").strip().lower()
     return answer in ("y", "yes")
 
 

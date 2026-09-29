@@ -9,4 +9,5 @@ pillow
 requests
 beautifulsoup4
 rich
+psutil
 python-dotenv

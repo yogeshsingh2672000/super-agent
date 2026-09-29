@@ -26,7 +26,7 @@ def web_search(query: str, max_results: int = 5) -> str:
         return f"Search failed: {e}"
     lines, numbers = [], []
     for r in results or []:
-        n = sources.add(r["href"], r["title"])
+        n = sources.add(r["href"], r["title"], text=r["body"])
         numbers.append(n)
         lines.append(f"[{n}] {r['title']}\n{r['href']}\nSnippet (unverified, date unknown): {r['body']}")
     log("🔎", f'Searching "{query}" → sources {_source_range(numbers)}')
@@ -45,7 +45,7 @@ def news_search(query: str, period: str = "w", max_results: int = 5) -> str:
     lines, numbers = [], []
     for r in results or []:
         date = sources.short_date(r.get("date", ""))
-        n = sources.add(r["url"], f"{r['title']} ({r.get('source', '')})", date)
+        n = sources.add(r["url"], f"{r['title']} ({r.get('source', '')})", date, text=r["body"])
         numbers.append(n)
         lines.append(f"[{n}] {r['title']} | {r.get('source', '')} | published {date}\n{r['url']}\nSnippet: {r['body']}")
     log("📰", f'News search "{query}" ({period}) → sources {_source_range(numbers)}')
@@ -64,11 +64,11 @@ def fetch_page(url: str) -> str:
     soup = BeautifulSoup(response.text, "html.parser")
     title = soup.title.string.strip() if soup.title and soup.title.string else ""
     date = sources.find_page_date(soup, response.headers.get("Last-Modified", ""))
-    n = sources.add(url, title, date, opened=True)
-    log("🌐", f"Opening [{n}] {url}")
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
     text = " ".join(soup.get_text(" ").split())
+    n = sources.add(url, title, date, opened=True, text=text)
+    log("🌐", f"Opening [{n}] {url}")
     return truncate(f"Source [{n}] | {title} | page date: {date or 'unknown'}\n{text}")
 
 

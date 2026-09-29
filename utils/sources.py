@@ -74,18 +74,25 @@ def _key_numbers(sentence: str) -> list[str]:
     return result
 
 
+def _not_in(numbers: list[str], text: str) -> list[str]:
+    plain = text.replace(",", "")
+    return [v for v in numbers if v.replace(",", "") not in plain]
+
+
 def check_numbers(answer: str) -> dict[int, list[str]]:
-    """For each cited source, the numbers from its sentences that are NOT in its text."""
+    """Numbers NOT found in their cited source. Key 0 = uncited numbers found in no source."""
     missing: dict[int, list[str]] = {}
-    sentences = re.split(r"(?<=[.!?])\s+|\n", answer)
-    for sentence in sentences:
+    all_text = " ".join(s["text"] for s in _sources)
+    for sentence in re.split(r"(?<=[.!?])\s+|\n", answer):
         numbers = _key_numbers(sentence)
-        for n in _citation_numbers(sentence):
-            if not 1 <= n <= len(_sources) or not numbers:
-                continue
-            page = _sources[n - 1]["text"].replace(",", "")
-            not_found = [v for v in numbers if v.replace(",", "") not in page]
-            missing.setdefault(n, []).extend(v for v in not_found if v not in missing.get(n, []))
+        if not numbers:
+            continue
+        cited_here = [n for n in _citation_numbers(sentence) if 1 <= n <= len(_sources)]
+        checks = [(n, _sources[n - 1]["text"]) for n in cited_here] or [(0, all_text)]
+        for n, text in checks:
+            for value in _not_in(numbers, text):
+                if value not in missing.setdefault(n, []):
+                    missing[n].append(value)
     return missing
 
 

@@ -64,7 +64,7 @@ def _read():
     text = page.inner_text("body")
     elements = page.eval_on_selector_all("a, button, input, textarea, select", ELEMENTS_JS)
     date = sources.find_page_date(BeautifulSoup(page.content(), "html.parser"))
-    n = sources.add(page.url, page.title(), date, opened=True)
+    n = sources.add(page.url, page.title(), date, opened=True, text=text)
     return truncate(
         f"Source [{n}] | URL: {page.url}\nTitle: {page.title()} | page date: {date or 'unknown'}\n\n"
         f"Text:\n{text}\n\nElements:\n" + "\n".join(elements)
