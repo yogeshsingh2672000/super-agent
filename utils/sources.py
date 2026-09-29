@@ -96,6 +96,20 @@ def check_numbers(answer: str) -> dict[int, list[str]]:
     return missing
 
 
+def excerpt(n: int, answer: str, size: int = 300) -> str:
+    """Text around the first answer number found in source n, else its start."""
+    text = _sources[n - 1]["text"]
+    if not text:
+        return ""
+    for value in _key_numbers(answer):
+        at = max(text.find(value), text.find(value.replace(",", "")))
+        if at >= 0:
+            start = max(0, at - size // 2)
+            end = start + size
+            return ("…" if start else "") + text[start:end].strip() + ("…" if end < len(text) else "")
+    return text[:size].strip() + ("…" if len(text) > size else "")
+
+
 def short_date(value: str) -> str:
     value = (value or "").strip()
     if re.match(r"\d{4}-\d{2}-\d{2}", value):

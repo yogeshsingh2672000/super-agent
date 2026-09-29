@@ -32,7 +32,9 @@ While a task runs, a live line shows CPU, system RAM, and the RAM used by the ag
 
 ## Sources
 - Every web result gets a number `[n]`. The agent cites them in its answer.
-- After the answer, a **📚 Sources** panel lists the cited sources as clickable links. Ctrl+click them in Windows Terminal.
+- After the answer, a compact **📚 Sources** panel lists the cited sources as clickable links. Ctrl+click them in Windows Terminal.
+- Press **F2** at the `You:` prompt to expand it: you get dates, full URLs and a "Read more" excerpt from each page. Press F2 again to collapse.
+- `/sources` expands all sources; `/sources 2` shows a longer excerpt of source [2]. Use these where F2 isn't supported, such as Git Bash.
 - Each source is marked ✅ opened or ⚠️ snippet only, with its date.
 - Every number in the answer is checked against the text of its cited source. Numbers that aren't found are flagged ❌ in red.
 

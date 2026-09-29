@@ -10,4 +10,5 @@ requests
 beautifulsoup4
 rich
 psutil
+prompt_toolkit
 python-dotenv
