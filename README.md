@@ -1,6 +1,6 @@
 # Super Agent
 
-Autonomous terminal agent (LangChain + Claude on AWS Bedrock). It plans, uses your PC, browses the web, controls the screen, remembers what you tell it, and tracks its own cost.
+Autonomous terminal agent built on LangChain. It runs on AWS Bedrock, OpenAI, Ollama or LM Studio. It plans, uses your PC, browses the web, controls the screen, remembers what you tell it, and tracks its own cost.
 
 ## Setup
 ```powershell
@@ -13,8 +13,24 @@ AWS credentials come from `aws configure` (~/.aws) unless set in `.env`.
 
 ## Run
 ```powershell
-.venv\Scripts\python main.py
+.venv\Scripts\python main.py                      # startup menu: pick a provider
+.venv\Scripts\python main.py --provider ollama    # skip the menu
 ```
+
+## Providers
+You pick only the provider at startup. The model comes from that provider's section in `.env` (`# bedrock`, `# openai`, `# ollama`, `# lmstudio`). Each section holds its own credentials, model, prices and options, so they never mix. `DEFAULT_PROVIDER` picks the default row.
+
+The menu shows each provider's model, price, and whether it's ready. It refuses a provider whose credentials or model are missing, or whose local model isn't installed or loaded, and tells you what to fix.
+
+| Provider | Needs | Cost |
+|---|---|---|
+| AWS Bedrock | AWS keys in `.env` or `aws configure` | `BEDROCK_*_PRICE_PER_M` |
+| OpenAI | `OPENAI_API_KEY`, `OPENAI_MODEL` | `OPENAI_*_PRICE_PER_M` |
+| Ollama | Ollama app running, a model pulled (`ollama pull qwen3:8b`) | free |
+| LM Studio | a model loaded, Developer > Start Server | free |
+
+- **Local models must support tool calling** (e.g. qwen3, llama3.1), or the agent can't use tools. In LM Studio, set the context length to at least 16k when loading the model.
+- **Screen control:** `*_VISION=false` removes it, for models that can't read images. gpt-oss models are always treated as text-only.
 Commands: `/budget`, `/memory`, `/stats`, `/new` (fresh chat, memories kept), `/exit`. `Ctrl+C` stops the current task.
 
 While a task runs, a live line shows CPU, system RAM, and the RAM used by the agent and its browser/shell processes. It updates every second.
@@ -45,14 +61,15 @@ While a task runs, a live line shows CPU, system RAM, and the RAM used by the ag
 - **Spend cap**: `MAX_DAILY_SPEND` in `.env` stops the agent when today's cost reaches it.
 
 ## Costs
-- Token cost uses `INPUT_PRICE_PER_M` / `OUTPUT_PRICE_PER_M` from `.env`. Check your Bedrock pricing and update them.
+- Token cost uses the chosen provider's `*_INPUT_PRICE_PER_M` / `*_OUTPUT_PRICE_PER_M` from `.env`. Local models cost $0.
 - Real money the agent spends or earns is recorded by the agent itself.
 - Daily totals are saved in `data/ledger.json`.
 
 ## Layout
 ```
 main.py            terminal chat
-config.py          settings from .env
+config.py          shared settings from .env
+providers/         one file per model provider (bedrock, openai, ollama, lmstudio)
 agent/builder.py   model + tools + prompt
 prompts/           one prompt per skill
 tools/             one file per skill

@@ -1,26 +1,44 @@
+import argparse
 import sys
 import uuid
 
 from langgraph.errors import GraphRecursionError
+from rich.markup import escape
 from rich.panel import Panel
 
 import config
 from agent.builder import build_agent
+from providers import PROVIDERS, model_name
 from tools.browser import close_browser
-from utils import ledger, memory_store, prompt_input, source_view, sources, system_monitor
+from utils import ledger, memory_store, prompt_input, provider_picker, source_view, sources, system_monitor
 from utils.logger import console, log, write_file_log
 from utils.text import message_text
 
 HELP = "F2 expand/collapse sources | /sources [N]  /budget  /memory  /stats  /new  /exit"
 
 
-def show_banner() -> None:
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Super Agent")
+    parser.add_argument("--provider", default="", help=f"skip the menu: {', '.join(PROVIDERS)}")
+    return parser.parse_args()
+
+
+def error_hint(error: Exception) -> str:
+    text = str(error).lower()
+    if "does not support tools" in text or ("tool" in text and "not supported" in text):
+        return " This model can't call tools. Pick one with tool support (e.g. qwen3, llama3.1)."
+    if "connection" in text and ("refused" in text or "connect" in text):
+        return " Is the local model server running?"
+    return ""
+
+
+def show_banner(provider: str) -> None:
     s = ledger.summary()
     count = len(memory_store.load())
     console.print(Panel.fit(
-        f"[bold]Super Agent[/] | model {config.MODEL_ID}\n"
+        f"[bold]Super Agent[/] | {PROVIDERS[provider].NAME} | model {escape(model_name(provider))}\n"
         f"Today: cost ${s['total_cost']:.4f} | income ${s['income']:.2f} | limit ${s['daily_limit']:.2f}\n"
-        f"{count} memories loaded | {HELP}",
+        f"{count} memories loaded | {escape(HELP)}",
         border_style="cyan",
     ))
 
@@ -56,8 +74,15 @@ def run_task(agent, task: str, thread_id: str) -> None:
 
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
-    show_banner()
-    agent = build_agent()
+    args = parse_args()
+    try:
+        provider = provider_picker.choose(args.provider)
+    except (EOFError, KeyboardInterrupt):
+        console.print("Bye!")
+        return
+    show_banner(provider)
+    agent = build_agent(provider)
+    write_file_log(f"PROVIDER: {provider} | MODEL: {model_name(provider)}")
     thread_id = str(uuid.uuid4())
 
     while True:
@@ -97,7 +122,7 @@ def main() -> None:
             log("⏹️ ", "Task interrupted by you. Starting a fresh chat.", style="yellow")
             thread_id = str(uuid.uuid4())  # old chat may hold a half-finished step
         except Exception as e:
-            log("❌", f"Error: {e}. Starting a fresh chat.", style="bold red")
+            log("❌", f"Error: {e}.{error_hint(e)} Starting a fresh chat.", style="bold red")
             thread_id = str(uuid.uuid4())
 
     close_browser()
